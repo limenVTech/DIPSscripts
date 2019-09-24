@@ -21,7 +21,7 @@ def get_file():
         delimiter = '\t'
     else:
         delimiter = ','
-    print(f'Delimiter = \'{delimiter}\'.')
+    print(f'Delimiter = \'{delimiter}\' ')
     return dipsfile, delimiter
 
 
@@ -78,7 +78,7 @@ def convert_file(input_csv, separator):
                 blank_row = True
                 newrow = []
                 for n in range(0, 112):
-                    newrow.append(" ")
+                    newrow.append("")
                 for field in dips_headers:
                     if "identifier" in field.lower():
                         newrow[0] = rows[field]
