@@ -5,6 +5,7 @@ proper header row and fields for upload to ArchivesSpace.
 """
 
 import csv
+from datetime import date
 from os import path
 from time import strftime
 
@@ -23,6 +24,50 @@ def get_file():
         delimiter = ','
     print(f'Delimiter = \'{delimiter}\' ')
     return dipsfile, delimiter
+
+
+def valid_date(in_date, linenum):
+    bad_date = str(in_date)
+    good_length = [4, 6, 7, 9, 10]
+    if not len(bad_date) in good_length:
+        print(f'You have a badly formatted date on line: {linenum} .\nYou must correct this before AS import.')
+        good_date = date(1000, 1, 1)
+        return good_date
+    elif len(bad_date) == 4:
+        good_date = date(int(bad_date), 1, 1)
+        return good_date
+    elif len(bad_date) == 6 or len(bad_date) == 7:
+        if "-" in bad_date:
+            y, m = bad_date.split("-")
+        elif "/" in bad_date:
+            y, m = bad_date.split("/")
+        else:
+            print(f'You have a badly formatted date on line: {linenum} .\nYou must correct this before AS import.')
+            good_date = date(1000, 1, 1)
+            return good_date
+        good_date = date(int(y), int(m), 1)
+        return good_date
+    elif len(bad_date) == 9 or len(bad_date) == 10:
+        if "-" in bad_date:
+            try:
+                y, m, d = bad_date.split("-")
+            except ValueError:
+                print(f'You have a badly formatted date on line: {linenum} .\nYou must correct this before AS import.')
+                good_date = date(1000, 1, 1)
+                return good_date
+        elif "/" in bad_date:
+            try:
+                y, m, d = bad_date.split("/")
+            except ValueError:
+                print(f'You have a badly formatted date on line: {linenum} .\nYou must correct this before AS import.')
+                good_date = date(1000, 1, 1)
+                return good_date
+        good_date = date(int(y), int(m), int(d))
+        return good_date
+    else:
+        print(f'You have a badly formatted date on line: {linenum} .\nYou must correct this before AS import.')
+        good_date = date(1000, 1, 1)
+        return good_date
 
 
 def convert_file(input_csv, separator):
@@ -79,6 +124,8 @@ def convert_file(input_csv, separator):
                 newrow = []
                 for n in range(0, 112):
                     newrow.append("")
+                # Add default values to ASpace fields
+                newrow[4] = "TRUE"
                 for field in dips_headers:
                     if "identifier" in field.lower():
                         newrow[0] = rows[field]
@@ -92,11 +139,18 @@ def convert_file(input_csv, separator):
                     elif "description" in field.lower():
                         newrow[78] = rows[field]
                         blank_row = False
-                    elif "subject" in field.lower():
-                        newrow[100] = rows[field]
-                        blank_row = False
+                    # The JSON model in ArchivesSpace requires that Subject terms be defined by a controlled vocab, such
+                    # as LCSH, and requires URI's for the source vocab or authority.
+                    # elif "subject" in field.lower():
+                    #    newrow[100] = rows[field]
+                    #    blank_row = False
                     elif "created" in field.lower():
-                        newrow[69] = rows[field]
+                        if not rows[field].strip() == "":
+                            newdate = valid_date(rows[field], num_rows)
+                            created = str(newdate.year) + "-" + str(newdate.month) + "-" + str(newdate.day)
+                        else:
+                            created = ""
+                        newrow[69] = created
                         blank_row = False
                     elif "type" in field.lower():
                         newrow[5] = rows[field]
@@ -110,9 +164,11 @@ def convert_file(input_csv, separator):
                     elif "spatial" in field.lower():
                         newrow[75] = rows[field]
                         blank_row = False
-                    elif "format" in field.lower():
-                        newrow[107] = rows[field]
-                        blank_row = False
+                    # ArchivesSpace does not have a suitable file format field, unless several required fields are
+                    # worked into the "file version" section.
+                    # elif "format" in field.lower():
+                    #    newrow[107] = rows[field]
+                    #    blank_row = False
                 if not blank_row:
                     csv_writer.writerow(newrow)
                     num_rows += 1
