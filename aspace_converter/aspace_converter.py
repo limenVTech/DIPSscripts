@@ -28,45 +28,45 @@ def get_file():
 
 def valid_date(in_date, linenum):
     bad_date = str(in_date)
-    good_length = [4, 6, 7, 9, 10]
+    good_length = [4, 6, 7, 8, 9, 10]
     if not len(bad_date) in good_length:
         print(f'You have a badly formatted date on line: {linenum} .\nYou must correct this before AS import.')
-        good_date = date(1000, 1, 1)
+        good_date = date(1111, 1, 1)
         return good_date
-    elif len(bad_date) == 4:
+    elif len(bad_date) == 4:  # A date that is just the year
         good_date = date(int(bad_date), 1, 1)
         return good_date
-    elif len(bad_date) == 6 or len(bad_date) == 7:
+    elif len(bad_date) in [6, 7]:  # A date that is just the year and the month
         if "-" in bad_date:
             y, m = bad_date.split("-")
         elif "/" in bad_date:
             y, m = bad_date.split("/")
         else:
             print(f'You have a badly formatted date on line: {linenum} .\nYou must correct this before AS import.')
-            good_date = date(1000, 1, 1)
+            good_date = date(1111, 1, 1)
             return good_date
         good_date = date(int(y), int(m), 1)
         return good_date
-    elif len(bad_date) == 9 or len(bad_date) == 10:
+    elif len(bad_date) in [8, 9, 10]:  # A date that is year, month, and day
         if "-" in bad_date:
             try:
                 y, m, d = bad_date.split("-")
             except ValueError:
                 print(f'You have a badly formatted date on line: {linenum} .\nYou must correct this before AS import.')
-                good_date = date(1000, 1, 1)
+                good_date = date(1111, 1, 1)
                 return good_date
         elif "/" in bad_date:
             try:
                 y, m, d = bad_date.split("/")
             except ValueError:
                 print(f'You have a badly formatted date on line: {linenum} .\nYou must correct this before AS import.')
-                good_date = date(1000, 1, 1)
+                good_date = date(1111, 1, 1)
                 return good_date
         good_date = date(int(y), int(m), int(d))
         return good_date
     else:
         print(f'You have a badly formatted date on line: {linenum} .\nYou must correct this before AS import.')
-        good_date = date(1000, 1, 1)
+        good_date = date(1111, 1, 1)
         return good_date
 
 
